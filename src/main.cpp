@@ -2,15 +2,6 @@
 #include "ArduinoJson.h"
 #include "Adafruit_INA228.h"
 
-#define USBSWTCH_RELAY 26
-#define BCI_OUTPUT_AMOUNT 8 // Amount of BCI outputs to be measured
-const int adapterBCI_Aux[] = {34, 36, 38}; // Inputs connected to Adapter BCI's outputs
-/*
-  adapterBCI_Aux[0] = MOLEX pin 6 = GREY wire
-  adapterBCI_Aux[1] = MOLEX pin 7 = YELLOW wire
-  adapterBCI_Aux[2] = MOLEX pin 9 = BLUE wire
-*/
-
 // currentSensor object based on AdaFruit INA228 library
 Adafruit_INA228 currentSensor = Adafruit_INA228();
 
@@ -21,6 +12,13 @@ Adafruit_INA228 currentSensor = Adafruit_INA228();
 const int analogPins[] =    {A0, A1, A2, A3, A4, A5, A6, A7};
 const int digitalPins[] =   {9,  8,  7,  6,  5,  4,  3,  2};
 
+const int adapterBCI_AuxPins[] = {34, 36, 38}; // Inputs connected to Adapter BCI's outputs
+/*
+  adapterBCI_Aux[0] = MOLEX pin 6 = GREY wire
+  adapterBCI_Aux[1] = MOLEX pin 7 = YELLOW wire
+  adapterBCI_Aux[2] = MOLEX pin 9 = BLUE wire
+*/
+const int UsbSwitchRelayPin = 26;
 
 
 // Ratio of voltage divider, in this case based on 3.84kΩ and 2.16kΩ resistors
@@ -53,10 +51,10 @@ void setup() {
   }
 
   for (int i =0; i < 3; i++){ // Setting pinModes for Adapter-BCI Aux inputs
-    pinMode(adapterBCI_Aux[i], INPUT);
+    pinMode(adapterBCI_AuxPins[i], INPUT);
   }
 
-  pinMode(USBSWTCH_RELAY, OUTPUT);   // Sets the pinMode for the USB Switch enable Pin
+  pinMode(UsbSwitchRelayPin, OUTPUT);   // Sets the pinMode for the USB Switch enable Pin
 
   while (!Serial){  // Waiting for serial connection
     delay(5);
@@ -72,9 +70,9 @@ void setup() {
 }
 
 void setUSBSwitch() { // Check USB Switch signal from Adapter-BCI and set swiitch enable signal
-  bool adapterBCICommand = digitalRead(adapterBCI_Aux[0]);
-  if (adapterBCICommand == HIGH) {digitalWrite(USBSWTCH_RELAY, HIGH);}
-  else {digitalWrite(USBSWTCH_RELAY, LOW);}
+  bool adapterBCICommand = digitalRead(adapterBCI_AuxPins[0]);
+  if (adapterBCICommand == HIGH) {digitalWrite(UsbSwitchRelayPin, HIGH);}
+  else {digitalWrite(UsbSwitchRelayPin, LOW);}
   return;
 }
 
@@ -170,15 +168,8 @@ infoData currentTest(){
   }
   float currentSum = 0;
   float voltageSum = 0;
-
-  //for (int i = 0; i < currentSampleSize; i++){
-  //  currentSum += currentSensor.readCurrent();
-  //}
   data.measuredCurrent = currentSensor.getCurrent_mA();
 
-  //for (int i =0; i < voltageSampleSize; i++){
-  //  voltageSum += currentSensor.readBusVoltage();
-  //}
   data.measuredVoltage = currentSensor.getBusVoltage_V();
   data.measuredTemperature = currentSensor.readDieTemp();
   return data;
@@ -232,7 +223,7 @@ void loop() {
   JsonDocument doc;                                  // Json document 
   JsonArray jsonMsgArray = doc.to<JsonArray>();      // Create Json array that stores all objects (corresponding to each output)
   //unsigned long timeBefore = micros();
-  for(int i = 0; i < BCI_OUTPUT_AMOUNT; i++){             // Cycle through all outputs
+  for(int i = 0; i < 8; i++){             // Cycle through all outputs
     signalData outputData = signalTest(i);
     addPinDataJson(jsonMsgArray, outputData);       // Add data to Json array
     setUSBSwitch();
@@ -241,7 +232,5 @@ void loop() {
   addInfoJson(jsonMsgArray, info);                // Add data from InfoData info to JSON array
   serializeJson(jsonMsgArray, Serial);            // Serialize JSON array into string and write over serial
   Serial.println();                               // Add NewLine char at the end of JSON (essential for parsing) [\r\n]
-  unsigned long timeAfter = millis();  //debugging
-  unsigned long duration = timeAfter - timeBefore; //debugging
 }
 
