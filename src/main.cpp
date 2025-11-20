@@ -189,10 +189,6 @@ void printData(signalData data){
     Serial.print("High: " + String(data.highVoltage, 2) + " V    ");
     Serial.print("Low: " + String(data.lowVoltage, 2) + " V    ");
     Serial.println("Duty Cycle: " + String(data.dutyCycle, 2) + " %");
-  //}
-  //else{
-  //  Serial.println("No square wave @ pin " + String(data.pin));
-  //}
 }
 
 // Serializes data of single pin measurement to JSON array
