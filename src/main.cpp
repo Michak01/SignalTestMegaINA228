@@ -65,12 +65,13 @@ void setup() {
     systemOK = false;
   }
   currentSensor.setShunt(0.01695, 10.0); // Shunt resisor calibrated based on output current sensor
-  // 0.015 	10 Amp
+  // Shunt resistantor:0.015 Ohm 	   max current: 10 A
+
   currentSensor.setAveragingCount(INAaveragingCount);
   currentSensor.setCurrentConversionTime(INAconversionTime);
 }
 
-void setUSBSwitch() { // Check USB Switch 
+void setUSBSwitch() { // Check USB Switch signal from Adapter-BCI and set swiitch enable signal
   bool adapterBCICommand = digitalRead(adapterBCI_Aux[0]);
   if (adapterBCICommand == HIGH) {digitalWrite(USBSWTCH_RELAY, HIGH);}
   else {digitalWrite(USBSWTCH_RELAY, LOW);}
@@ -97,7 +98,6 @@ struct infoData {
 
 // Function to measure one BCI output signal on pin#
 signalData signalTest(int pin){
-  setUSBSwitch();
 
   signalData data; // Initialize data struct
   data.pin = pin;
@@ -157,7 +157,6 @@ signalData signalTest(int pin){
 }
 
 infoData currentTest(){
-  setUSBSwitch();
   
   infoData data;
   if (!systemOK == true){
@@ -236,17 +235,13 @@ void loop() {
   for(int i = 0; i < BCI_OUTPUT_AMOUNT; i++){             // Cycle through all outputs
     signalData outputData = signalTest(i);
     addPinDataJson(jsonMsgArray, outputData);       // Add data to Json array
-    //printData(outputData[i]);
+    setUSBSwitch();
   }
   infoData info = currentTest();
-  addInfoJson(jsonMsgArray, info);
+  addInfoJson(jsonMsgArray, info);                // Add data from InfoData info to JSON array
   serializeJson(jsonMsgArray, Serial);            // Serialize JSON array into string and write over serial
-  Serial.println();                               // Add NewLine char at the end of JSON (essential for parsing)
+  Serial.println();                               // Add NewLine char at the end of JSON (essential for parsing) [\r\n]
   unsigned long timeAfter = millis();  //debugging
   unsigned long duration = timeAfter - timeBefore; //debugging
-  //Serial.println("Duration: " + String(duration));
-  //unsigned long timeAfter = micros();
-  //unsigned long duration = timeAfter - timeBefore;
-  //Serial.println("Duration: " + String(duration));
-  //delay(0);
 }
+
