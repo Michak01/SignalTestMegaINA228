@@ -40,7 +40,7 @@ const int signalSampleSize = 2;
 const INA228_ConversionTime INAconversionTime = INA228_TIME_150_us;
 const INA228_AveragingCount INAaveragingCount = INA228_COUNT_256;
 
-// Self diagnosis; becomes false in case of malfunction
+// Self diagnosis; becomes false in case of malfunction of current sensor
 bool systemOK = true;
 
 void setup() {
@@ -129,7 +129,7 @@ signalData signalTest(int pin){
       break;                                                    // When pulseIn() times out, exit the loop to save time
     }
   }
-  if (data.squareWave == false){  // Implement method to record (single) analog reading -> Done
+  if (data.squareWave == false){ 
     return data;
   }
   // Calculating averages
